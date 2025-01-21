@@ -1,5 +1,6 @@
 using UnityEngine;
 
+//구슬이 트리거 영역에 들어오면 storageParent위치로 전송
 public class OrbStorage : MonoBehaviour
 {
     public Transform storageParent; // 구슬을 저장할 부모 트랜스폼
