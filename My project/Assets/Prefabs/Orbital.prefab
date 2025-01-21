@@ -53,7 +53,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: cd527a1019cd17c47a7655216377463a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.72
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: cd527a1019cd17c47a7655216377463a, type: 3}
       propertyPath: m_LocalPosition.z
@@ -91,6 +91,34 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: e8f05e253c61fd94e86f8e68f6dcdb2c, type: 2}
+    - target: {fileID: -7493596028755563170, guid: cd527a1019cd17c47a7655216377463a, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 70
+      objectReference: {fileID: 0}
+    - target: {fileID: -7493596028755563170, guid: cd527a1019cd17c47a7655216377463a, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 70
+      objectReference: {fileID: 0}
+    - target: {fileID: -7493596028755563170, guid: cd527a1019cd17c47a7655216377463a, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: -7493596028755563170, guid: cd527a1019cd17c47a7655216377463a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.046
+      objectReference: {fileID: 0}
+    - target: {fileID: -7493596028755563170, guid: cd527a1019cd17c47a7655216377463a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.11
+      objectReference: {fileID: 0}
+    - target: {fileID: -7493596028755563170, guid: cd527a1019cd17c47a7655216377463a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.011
+      objectReference: {fileID: 0}
+    - target: {fileID: 882129737928793925, guid: cd527a1019cd17c47a7655216377463a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e85829612b1c05344b9a8cc42eb53075, type: 2}
     - target: {fileID: 919132149155446097, guid: cd527a1019cd17c47a7655216377463a, type: 3}
       propertyPath: m_Name
       value: colorOrbital
