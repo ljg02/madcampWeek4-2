@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7484222668286197870}
   m_Layer: 0
   m_Name: Orbital
-  m_TagString: Untagged
+  m_TagString: Orb
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
