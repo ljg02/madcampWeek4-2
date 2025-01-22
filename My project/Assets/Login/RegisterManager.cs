@@ -4,6 +4,18 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
+[System.Serializable]
+public class RegisterRequest
+{
+    public string email;
+    public string password;
+
+    public RegisterRequest(string email, string password)
+    {
+        this.email = email;
+        this.password = password;
+    }
+}
 public class RegisterManager : MonoBehaviour
 {
     [SerializeField] private TMP_InputField emailInput;
@@ -24,10 +36,7 @@ public class RegisterManager : MonoBehaviour
         string email = emailInput.text;
         string password = passwordInput.text;
         string confirmPassword = confirmPasswordInput.text;
-        Debug.Log(email);
-        Debug.Log(password);
-        Debug.Log(confirmPassword);
-
+        
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(confirmPassword))
         {
             statusText.text = "Please fill all fields.";
@@ -42,10 +51,12 @@ public class RegisterManager : MonoBehaviour
 
         StartCoroutine(Register(email, password));
     }
-
+    
     private IEnumerator Register(string email, string password)
-    {
-        string jsonBody = JsonUtility.ToJson(new { email, password });
+    {   
+        RegisterRequest registerData = new RegisterRequest(email, password);
+        string jsonBody = JsonUtility.ToJson(registerData);
+        
         UnityWebRequest request = new UnityWebRequest(registerUrl, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -53,9 +64,6 @@ public class RegisterManager : MonoBehaviour
         request.SetRequestHeader("Content-Type", "application/json");
 
         yield return request.SendWebRequest();
-        
-        Debug.Log(request.result);
-        Debug.Log(UnityWebRequest.Result.Success);
         
         if (request.result == UnityWebRequest.Result.Success)
         {
