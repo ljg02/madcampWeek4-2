@@ -1,5 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
+using System; // 이벤트를 사용하기 위해 추가
 
 public class Orb : MonoBehaviour
 {
@@ -14,7 +15,10 @@ public class Orb : MonoBehaviour
     // Emission 관련 변수
     private Renderer orbRenderer;
     private Color originalEmissionColor;
-    private Color glowColor = Color.white; // 원하는 발광 색상으로 설정
+    private Color glowColor = new Color(225f / 255f, 255f / 255f, 37f / 255f); // 원하는 발광 색상으로 설정
+
+	// 클릭 이벤트 추가
+    public event Action<Orb> OnOrbClicked;
 
     void Start()
     {
@@ -76,6 +80,9 @@ public class Orb : MonoBehaviour
             Vector3 worldMousePosition = mainCamera.ScreenToWorldPoint(mousePosition);
             offset = transform.position - worldMousePosition;
         });
+
+		// 클릭 이벤트 발생
+        OnOrbClicked?.Invoke(this);
     }
 
     void OnMouseUp()
