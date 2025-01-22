@@ -18,7 +18,8 @@ public class BeamProjector : MonoBehaviour
     
     public Light directionalLight; // 전역 조명 (Directional Light) 참조
     public Light pointLight; // PointLight 참조
-    private float originalLightIntensity; // 원래 조명 강도 저장
+    private float originalDirectionalIntensity; // 원래 Directional Light의 강도 저장
+    private float targetPointIntensity = 5f; // Point Light의 목표 강도 설정 (필요에 따라 조정)
 
     // 현재 트리거 영역에 있는 Orb
     private Orb currentOrb;
@@ -64,7 +65,7 @@ public class BeamProjector : MonoBehaviour
         // 조명 초기화
         if (directionalLight != null)
         {
-            originalLightIntensity = directionalLight.intensity;
+            originalDirectionalIntensity = directionalLight.intensity;
             directionalLight.enabled = true;
         }
         else
@@ -75,7 +76,8 @@ public class BeamProjector : MonoBehaviour
         // PointLight 초기화 (비활성화)
         if (pointLight != null)
         {
-            pointLight.enabled = false;
+            pointLight.intensity = 0f; // 초기에는 Point Light를 끕니다.
+            pointLight.enabled = false; // 초기에는 비활성화
         }
         else
         {
@@ -381,11 +383,15 @@ public class BeamProjector : MonoBehaviour
         // Directional Light 비활성화 및 PointLight 활성화
         if (directionalLight != null)
         {
-            directionalLight.enabled = false;
+            directionalLight.DOIntensity(0f, 1f).SetEase(Ease.InOutQuad).OnComplete(() =>
+            {
+                directionalLight.enabled = false; // 완전히 어두워지면 비활성화
+            });
         }
         if (pointLight != null)
         {
-            pointLight.enabled = true;
+            pointLight.enabled = true; // 활성화
+            pointLight.DOIntensity(targetPointIntensity, 1f).SetEase(Ease.InOutQuad);
         }
     }
 
@@ -405,14 +411,19 @@ public class BeamProjector : MonoBehaviour
         // 화면 원래대로 되돌리기 (Alpha 0)
         DimScreen(0f, 1f);
         
-        // Directional Light 활성화 및 PointLight 비활성화
-        if (directionalLight != null)
-        {
-            directionalLight.enabled = true;
-        }
+        // Point Light 서서히 어둡게
         if (pointLight != null)
         {
-            pointLight.enabled = false;
+            pointLight.DOIntensity(0f, 1f).SetEase(Ease.InOutQuad).OnComplete(() =>
+            {
+                pointLight.enabled = false; // 완전히 어두워지면 비활성화
+            });
+        }
+        // Directional Light 서서히 밝게
+        if (directionalLight != null)
+        {
+            directionalLight.enabled = true; // 활성화
+            directionalLight.DOIntensity(originalDirectionalIntensity, 1f).SetEase(Ease.InOutQuad);
         }
     }
     
