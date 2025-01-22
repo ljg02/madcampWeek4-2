@@ -868,7 +868,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   screenRenderer: {fileID: 562474877}
   videoPlayer: {fileID: 0}
-  beamLineRenderer: {fileID: 0}
+  beamLineRenderer: {fileID: 833275658}
 --- !u!120 &833275658
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -920,7 +920,7 @@ LineRenderer:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
-        time: 0
+        time: 1
         value: 1
         inSlope: 0
         outSlope: 0

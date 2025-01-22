@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.Video;
 using DG.Tweening;
+using System; // 이벤트를 사용하기 위해 추가
+
 
 public class BeamProjector : MonoBehaviour
 {
@@ -14,13 +16,23 @@ public class BeamProjector : MonoBehaviour
     // 현재 트리거 영역에 있는 Orb
     private Orb currentOrb;
     private bool isProcessing = false; // 상태 관리 변수 추가
+    //private bool isMoving = false; // 이동 상태를 추적하는 플래그 추가
+    private Tween vibrateTween; // 진동 트윈을 저장할 변수 추가
+    private bool isVibrating = false; // 진동 상태 플래그
 
     // 초기 알파 값 설정
     private void Awake()
     {
-        // Material Instance 생성하여 공유되지 않도록 함
-        screenRenderer.material = new Material(screenRenderer.material);
-        SetScreenAlpha(0f);
+        if (screenRenderer != null)
+        {
+            // Material Instance 생성하여 공유되지 않도록 함
+            screenRenderer.material = new Material(screenRenderer.material);
+            SetScreenAlpha(0f);
+        }
+        else
+        {
+            Debug.LogError("Screen Renderer가 할당되지 않았습니다.");
+        }
         
         // 빔 Line Renderer 비활성화
         if (beamLineRenderer != null)
@@ -50,7 +62,7 @@ public class BeamProjector : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        // Debug.Log($"triggerEnter, processing : {isProcessing}.");
+        Debug.Log($"triggerEnter, processing : {isProcessing}.");
         if (isProcessing) return; // 이미 재생 중이라면 무시
         
         Orb orb = other.GetComponent<Orb>();
@@ -58,25 +70,32 @@ public class BeamProjector : MonoBehaviour
         {
             currentOrb = orb;
             isProcessing = true; // 재생 시작
-            ProjectOrbContent(orb.orbData);
+            ProjectOrbContent(orb.orbData, orb);
         }
     }
 
     void OnTriggerExit(Collider other)
     {
-        // Debug.Log($"triggerEnter, processing : {isProcessing}.");
+        Debug.Log($"triggerExit, processing : {isProcessing}, Vibrating: {isVibrating}.");
+        // 이동 중이라면 OnTriggerExit를 무시
+        if (isVibrating) return;
         if (!isProcessing) return; // 재생 중이 아니라면 무시
         
         Orb orb = other.GetComponent<Orb>();
         if (orb != null && orb == currentOrb)
         {
-            isProcessing = false; // 재생 끝
             ClearScreen();
-            currentOrb = null;
         }
     }
+    
+    private Vector3 GetHoverPosition()
+    {
+        // Define the hover height above the BeamProjector
+        float hoverHeight = 0.5f; // Adjust as needed
+        return transform.position + Vector3.up * hoverHeight;
+    }
 
-    private void ProjectOrbContent(OrbData orbData)
+    private void ProjectOrbContent(OrbData orbData, Orb orb)
     {
         if (orbData.orbVideo != null && videoPlayer != null)
         {
@@ -84,36 +103,127 @@ public class BeamProjector : MonoBehaviour
             videoPlayer.clip = orbData.orbVideo;
             videoPlayer.targetTexture = new RenderTexture(1920, 1080, 0);
             screenRenderer.material.mainTexture = videoPlayer.targetTexture;
-            SetScreenAlpha(0f).OnComplete(() =>
-            {
-                SetScreenAlpha(1f, 1f).OnComplete(() =>
-                {
-                    // Debug.Log("Fade-in completed.");
-                    // 빔 활성화 및 구슬 발광
-                    ActivateBeam();
-                    currentOrb.EnableGlow();
-                }); // 페이드 인 애니메이션
-            });
             videoPlayer.Play();
+
+            // Disable Rigidbody physics
+            Rigidbody rb = orb.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.isKinematic = true;
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+            
+            isVibrating = true;
+
+            // Define the hover positions
+            Vector3 initialHoverPosition = GetHoverPosition() + Vector3.up * 0.5f; // slightly above
+            Vector3 finalHoverPosition = GetHoverPosition(); // final hover position
+
+            // Create the main sequence
+            Sequence mainSequence = DOTween.Sequence();
+            
+            // Set isMoving to true before starting movement
+            //isMoving = true;
+
+            // Append fade-in and move-up simultaneously
+            mainSequence.Append(SetScreenAlpha(1f, 1f).SetEase(Ease.InOutQuad));
+            //mainSequence.Join(orb.transform.DOMove(initialHoverPosition, 0.5f).SetEase(Ease.OutCubic));
+
+            // Then move down to final hover position
+            //mainSequence.Append(orb.transform.DOMove(finalHoverPosition, 0.5f).SetEase(Ease.InCubic));
+
+            // After movement, activate beam and enable glow
+            mainSequence.AppendCallback(() =>
+            {
+                //isMoving = false; // 이동 완료
+                ActivateBeam();
+                if (orb != null)
+                {
+                    orb.EnableGlow();
+                    StartVibration(orb); // 진동 시작
+                    
+                    // Orb의 클릭 이벤트 구독
+                    orb.OnOrbClicked += HandleOrbClicked;
+                }
+                else
+                {
+                    Debug.LogWarning("current orb is null@@@");
+                }
+            });
+
+            // Start the sequence
+            mainSequence.Play();
         }
         else if (orbData.orbImage != null && screenRenderer != null)
         {
             // 이미지 텍스처 설정
             screenRenderer.material.mainTexture = orbData.orbImage.texture;
-            SetScreenAlpha(0f).OnComplete(() =>
+            //videoPlayer.Stop();
+
+            // Disable Rigidbody physics
+            Rigidbody rb = orb.GetComponent<Rigidbody>();
+            if (rb != null)
             {
-                SetScreenAlpha(1f, 1f).OnComplete(() =>
+                rb.isKinematic = true;
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+            
+            isVibrating = true;
+
+            // Define the hover positions
+            Vector3 initialHoverPosition = GetHoverPosition() + Vector3.up * 0.5f; // slightly above
+            Vector3 finalHoverPosition = GetHoverPosition(); // final hover position
+
+            // Create the main sequence
+            Sequence mainSequence = DOTween.Sequence();
+            
+            // Set isMoving to true before starting movement
+            //isMoving = true;
+
+            // Append fade-in and move-up simultaneously
+            mainSequence.Append(SetScreenAlpha(1f, 1f).SetEase(Ease.InOutQuad));
+            //mainSequence.Join(orb.transform.DOMove(initialHoverPosition, 0.5f).SetEase(Ease.OutCubic));
+
+            // Then move down to final hover position
+            //mainSequence.Append(orb.transform.DOMove(finalHoverPosition, 0.5f).SetEase(Ease.InCubic));
+
+            // After movement, activate beam and enable glow
+            mainSequence.AppendCallback(() =>
+            {
+                //isMoving = false; // 이동 완료
+                ActivateBeam();
+                if (orb != null)
                 {
-                    // Debug.Log("Fade-in completed.");
-                    // 빔 활성화 및 구슬 발광
-                    ActivateBeam();
-                    currentOrb.EnableGlow();
-                }); // 페이드 인 애니메이션
+                    orb.EnableGlow();
+                    StartVibration(orb); // 진동 시작
+                    
+                    // Orb의 클릭 이벤트 구독
+                    orb.OnOrbClicked += HandleOrbClicked;
+                }
+                else
+                {
+                    Debug.LogWarning("current orb is null@@@");
+                }
             });
+
+            // Start the sequence
+            mainSequence.Play();
         }
         else
         {
             Debug.LogWarning("OrbData에 이미지나 비디오가 설정되지 않았습니다.");
+            isProcessing = false; // 데이터가 없을 경우 처리 상태 해제
+        }
+    }
+    
+    private void HandleOrbClicked(Orb orb)
+    {
+        // Orb가 클릭되면 진동을 멈추고 화면을 클리어
+        if (orb == currentOrb)
+        {
+            ClearScreen();
         }
     }
 
@@ -125,29 +235,42 @@ public class BeamProjector : MonoBehaviour
             videoPlayer.targetTexture = null;
         }
         
-        SetScreenAlpha(1f).OnComplete(() =>
+        isVibrating = false;
+        
+        Sequence fadeOutSequence = DOTween.Sequence();
+
+        fadeOutSequence.Append(SetScreenAlpha(1f, 1f));
+        fadeOutSequence.Append(SetScreenAlpha(0f, 1f));
+
+        fadeOutSequence.AppendCallback(() =>
         {
-            if (screenRenderer != null)
+            Debug.Log("Fade-out completed.");
+            isProcessing = false; // 페이드 아웃 완료 후 처리 상태 해제
+            // 빔 비활성화 및 구슬 발광 비활성화
+            DeactivateBeam();
+            if (currentOrb != null)
             {
-                screenRenderer.material.mainTexture = null;
-                SetScreenAlpha(0f, 1f).OnComplete(() =>
-                {
-                    Debug.Log("Fade-out completed.");
-                    isProcessing = false; // 페이드 아웃 완료 후 처리 상태 해제
-                    // 빔 비활성화 및 구슬 발광 비활성화
-                    DeactivateBeam();
-                    if (currentOrb != null)
-                    {
-                        currentOrb.DisableGlow();
-                    }
-                }); // 페이드 아웃 애니메이션
+                currentOrb.DisableGlow();
+                StopVibration(currentOrb); // 진동 중지
+                
+                // Orb의 클릭 이벤트 구독 해제
+                currentOrb.OnOrbClicked -= HandleOrbClicked;
             }
+            currentOrb = null; // Orb 제거 후 참조 해제
         });
+
+        fadeOutSequence.Play();
     }
     
     // Tween을 반환하도록 수정
     private Tween SetScreenAlpha(float alpha, float duration = 0f)
     {
+        if (screenRenderer == null)
+        {
+            Debug.LogError("Screen Renderer가 null입니다.");
+            return null;
+        }
+        
         Color color = screenRenderer.material.color;
         // DOTween을 사용하여 알파 값을 변경하고 Tween 반환
         return DOTween.To(() => color.a, x => 
@@ -175,6 +298,44 @@ public class BeamProjector : MonoBehaviour
             beamLineRenderer.enabled = false;
         }
     }
+    
+    private void StartVibration(Orb orb)
+    {
+        if (orb == null) return;
+        
+        //isVibrating = true; // 진동 상태 플래그 설정
+
+        // 진동 파라미터 설정
+        float vibrationAmplitude = 0.5f; // 진동 폭 조절
+        float vibrationDuration = 1f;    // 각 진동의 지속 시간
+
+        // 현재 위치 저장
+        Vector3 originalPosition = orb.transform.position;
+
+        // 지속적인 진동 트윈 생성
+        vibrateTween = orb.transform.DOMoveY(
+                originalPosition.y + vibrationAmplitude,
+                vibrationDuration
+            )
+            .SetLoops(-1, LoopType.Yoyo) // 무한 반복, Yoyo 방식
+            .SetEase(Ease.InOutSine);
+    }
+
+    private void StopVibration(Orb orb)
+    {
+        if (vibrateTween != null && vibrateTween.IsActive())
+        {
+            vibrateTween.Kill(); // 트윈 중지
+        }
+        
+        //isVibrating = false; // 진동 상태 플래그 해제
+
+        if (orb != null)
+        {
+            // 원래 위치로 복귀 (필요 시)
+            orb.transform.DOMoveY(GetHoverPosition().y, 0.2f).SetEase(Ease.OutSine);
+        }
+    }
 
     private void OnVideoPrepared(VideoPlayer vp)
     {
@@ -187,6 +348,12 @@ public class BeamProjector : MonoBehaviour
         if (videoPlayer != null)
         {
             videoPlayer.prepareCompleted -= OnVideoPrepared;
+        }
+        
+        // 현재 orb가 있다면 이벤트 구독 해제
+        if (currentOrb != null)
+        {
+            currentOrb.OnOrbClicked -= HandleOrbClicked;
         }
     }
 }
