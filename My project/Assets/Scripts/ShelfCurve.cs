@@ -8,7 +8,7 @@ public class ShelfCurve : MonoBehaviour
 
     private List<Vector3> shelfPositions = new List<Vector3>();
 
-    void Start()
+    void Awake()
     {
         GenerateShelfPositions();
     }

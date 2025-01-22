@@ -36,12 +36,8 @@ public class Orb : MonoBehaviour
         // 선반의 자식에서 탈출
         transform.SetParent(null);
         
-        // CurveOrbStorage에서 processedOrbs에서 제거
-        CurveOrbStorage storage = CurveOrbStorage.Instance;
-        if (storage != null)
-        {
-            storage.RemoveFromProcessedOrbs(this.gameObject);
-        }
+        // 선반에서 자리 상태 제거
+        CurveOrbStorage.Instance.ReleaseOrb(this.gameObject);
         
         // Rigidbody 물리 비활성화
         if (rb != null)
@@ -73,13 +69,6 @@ public class Orb : MonoBehaviour
 
         // Rigidbody 물리 활성화
         rb.isKinematic = false;
-
-        // 만약 선반에 놓인 상태라면, 선반 시스템에 다시 등록
-        CurveOrbStorage storage = FindObjectOfType<CurveOrbStorage>();
-        if (storage != null && storage.IsPositionOnShelf(transform.position))
-        {
-            storage.RegisterOrbToShelf(this.gameObject, transform.position);
-        }
     }
 
     private void MoveWithMouse()

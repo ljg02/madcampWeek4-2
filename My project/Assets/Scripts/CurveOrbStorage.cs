@@ -11,11 +11,10 @@ public class CurveOrbStorage : MonoBehaviour
 
     private List<List<Vector3>> allStoragePositions = new List<List<Vector3>>(); // 모든 선반의 저장 위치
     // allStoragePositions[0] : 0번 선반 커브 상의 지점들 리스트
+    private List<bool[]> allStorageStates = new List<bool[]>(); // 각 선반 자리 상태 관리 (true: 구슬 있음, false: 비어 있음)
     private Queue<GameObject> orbQueue = new Queue<GameObject>();
     // 선반으로 이동시킬 오브젝트 대기 큐
     private HashSet<GameObject> processedOrbs = new HashSet<GameObject>(); // 처리된 오브젝트 추적
-    private int[] currentShelfStorageIndices; // 각 선반의 현재 저장 인덱스
-    // currentShelfStorageIndices[0] : 0번 선반의 다음 저장 위치
     private bool isProcessing = false;
     
     public static CurveOrbStorage Instance { get; private set; } // 싱글톤 인스턴스
@@ -46,15 +45,11 @@ public class CurveOrbStorage : MonoBehaviour
         {
             var positions = shelf.GetShelfPositions();
             allStoragePositions.Add(positions);
+            Debug.Log($"ShelfCurve {shelf.name} returned {positions.Count} positions.");
+            // 각 선반의 자리 상태를 초기화 (모두 비어 있음)
+            allStorageStates.Add(new bool[positions.Count]);
         }
-
-        // 각 선반의 저장 인덱스 초기화
-        currentShelfStorageIndices = new int[shelfCurves.Count];
-        for (int i = 0; i < currentShelfStorageIndices.Length; i++)
-        {
-            currentShelfStorageIndices[i] = 0;
-        }
-
+        
         // 디버그 로그로 저장 위치 확인
         for (int i = 0; i < allStoragePositions.Count; i++)
         {
@@ -93,22 +88,26 @@ public class CurveOrbStorage : MonoBehaviour
     private IEnumerator ProcessQueue()
     {
         isProcessing = true;
-
-        Sequence sequence = DOTween.Sequence();
-
+        
         while (orbQueue.Count > 0)
         {
             GameObject orb = orbQueue.Dequeue();
 
             // 저장 가능한 위치 찾기
-            Vector3? targetPosition = GetNextAvailablePosition();
-            if (targetPosition == null)
+            (int shelfIndex, int positionIndex)? target = GetNextAvailablePosition();
+            if (target == null)
             {
                 Debug.LogWarning("모든 선반이 가득 찼습니다.");
-                // 큐에 남아 있는 구슬을 다시 넣고 종료
-                orbQueue.Enqueue(orb);
                 break;
             }
+
+            // 위치 정보
+            int shelfIndex = target.Value.shelfIndex;
+            int positionIndex = target.Value.positionIndex;
+            Vector3 targetPosition = allStoragePositions[shelfIndex][positionIndex];
+
+            // 자리 상태 업데이트
+            allStorageStates[shelfIndex][positionIndex] = true;
 
             // Rigidbody 물리 비활성화
             Rigidbody rb = orb.GetComponent<Rigidbody>();
@@ -119,84 +118,54 @@ public class CurveOrbStorage : MonoBehaviour
                 rb.angularVelocity = Vector3.zero;
             }
 
-            // DOTween을 사용하여 구슬 이동 애니메이션 추가
-            Vector3 finalPosition = targetPosition.Value;
-            Tween moveTween = orb.transform.DOMove(finalPosition, moveDuration)
+            // DOTween을 사용하여 구슬 이동
+            Tween moveTween = orb.transform.DOMove(targetPosition, moveDuration)
                 .SetEase(easeType)
                 .OnComplete(() =>
                 {
                     // 부모 설정
                     orb.transform.SetParent(transform);
-                    orb.transform.position = finalPosition; // 정확한 위치 설정
+                    orb.transform.position = targetPosition;
                     orb.transform.localRotation = Quaternion.identity;
                 });
 
-            sequence.Join(moveTween);
+            yield return moveTween.WaitForCompletion();
         }
-
-        // 모든 구슬 애니메이션 완료 대기
-        yield return sequence.WaitForCompletion();
 
         isProcessing = false;
     }
 
-
-
     // 다음 사용할 저장 위치를 반환
-    private Vector3? GetNextAvailablePosition()
+    private (int shelfIndex, int positionIndex)? GetNextAvailablePosition()
     {
-        for (int i = 0; i < allStoragePositions.Count; i++)
+        for (int shelfIndex = 0; shelfIndex < allStorageStates.Count; shelfIndex++)
         {
-            if (currentShelfStorageIndices[i] < allStoragePositions[i].Count)
+            for (int positionIndex = 0; positionIndex < allStorageStates[shelfIndex].Length; positionIndex++)
             {
-                Vector3 pos = allStoragePositions[i][currentShelfStorageIndices[i]];
-                currentShelfStorageIndices[i]++;
-                return pos;
-            }
-        }
-
-        // 모든 선반이 가득 찼을 때
-        return null;
-    }
-    
-    // 구슬이 선반에 놓였는지 확인
-    public bool IsPositionOnShelf(Vector3 position)
-    {
-        foreach (var shelf in allStoragePositions)
-        {
-            foreach (var pos in shelf)
-            {
-                if (Vector3.Distance(position, pos) < 0.5f) // 거리 임계값 조정
+                if (!allStorageStates[shelfIndex][positionIndex]) // 비어 있는 자리 찾기
                 {
-                    return true;
+                    return (shelfIndex, positionIndex);
                 }
             }
         }
-        return false;
-    }
-
-    // 구슬을 선반에 다시 등록
-    public void RegisterOrbToShelf(GameObject orb, Vector3 position)
-    {
-        for (int i = 0; i < allStoragePositions.Count; i++)
-        {
-            for (int j = 0; j < allStoragePositions[i].Count; j++)
-            {
-                if (Vector3.Distance(position, allStoragePositions[i][j]) < 0.5f) // 거리 임계값 조정
-                {
-                    currentShelfStorageIndices[i] = Mathf.Max(currentShelfStorageIndices[i], j + 1);
-                    break;
-                }
-            }
-        }
+        return null; // 모든 자리가 가득 찼을 경우
     }
     
-    public void RemoveFromProcessedOrbs(GameObject orb)
+    // 구슬이 선반에서 빠질 때 자리 비우기
+    public void ReleaseOrb(GameObject orb)
     {
-        if (processedOrbs.Contains(orb))
+        for (int shelfIndex = 0; shelfIndex < allStoragePositions.Count; shelfIndex++)
         {
-            processedOrbs.Remove(orb);
-            Debug.Log($"Orb {orb.name} removed from processedOrbs.");
+            for (int positionIndex = 0; positionIndex < allStoragePositions[shelfIndex].Count; positionIndex++)
+            {
+                if (Vector3.Distance(orb.transform.position, allStoragePositions[shelfIndex][positionIndex]) < 0.5f)
+                {
+                    allStorageStates[shelfIndex][positionIndex] = false; // 자리 비우기
+                    processedOrbs.Remove(orb); // 처리된 오브젝트에서 제거
+                    Debug.Log($"Orb {orb.name} removed from shelf position {shelfIndex}, {positionIndex}.");
+                    return;
+                }
+            }
         }
     }
 }
