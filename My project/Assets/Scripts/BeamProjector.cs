@@ -11,7 +11,10 @@ public class BeamProjector : MonoBehaviour
 
     // VideoPlayer 컴포넌트 (비디오 재생 시 사용)
     public VideoPlayer videoPlayer;
-    public LineRenderer beamLineRenderer; // 빔 효과를 위한 Line Renderer
+    
+    public ParticleSystem beamParticleSystem; // Particle System 참조
+    
+    public GameObject beamCone; // Cone 객체 참조
 
     // 현재 트리거 영역에 있는 Orb
     private Orb currentOrb;
@@ -34,14 +37,24 @@ public class BeamProjector : MonoBehaviour
             Debug.LogError("Screen Renderer가 할당되지 않았습니다.");
         }
         
-        // 빔 Line Renderer 비활성화
-        if (beamLineRenderer != null)
+        // 빔 Particle System 비활성화
+        if (beamParticleSystem != null)
         {
-            beamLineRenderer.enabled = false;
+            beamParticleSystem.Stop();
         }
         else
         {
-            Debug.LogError("Beam Line Renderer가 할당되지 않았습니다.");
+            Debug.LogError("Beam Particle System이 할당되지 않았습니다.");
+        }
+        
+        // 빔 Cone 비활성화
+        if (beamCone != null)
+        {
+            beamCone.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("Beam Cone이 할당되지 않았습니다.");
         }
     }
     
@@ -280,25 +293,6 @@ public class BeamProjector : MonoBehaviour
         }, alpha, duration);
     }
     
-    private void ActivateBeam()
-    {
-        if (beamLineRenderer != null)
-        {
-            beamLineRenderer.enabled = true;
-            // 빔의 시작점과 끝점을 설정 (BeamProjector 위치와 Screen 위치)
-            beamLineRenderer.SetPosition(0, transform.position);
-            beamLineRenderer.SetPosition(1, screenRenderer.transform.position);
-        }
-    }
-
-    private void DeactivateBeam()
-    {
-        if (beamLineRenderer != null)
-        {
-            beamLineRenderer.enabled = false;
-        }
-    }
-    
     private void StartVibration(Orb orb)
     {
         if (orb == null) return;
@@ -341,6 +335,34 @@ public class BeamProjector : MonoBehaviour
     {
         // 비디오가 준비되면 재생
         vp.Play();
+    }
+    
+    // ActivateBeam 메서드 수정
+    private void ActivateBeam()
+    {
+        if (beamCone != null)
+        {
+            beamCone.SetActive(true);
+        }
+        
+        if (beamParticleSystem != null)
+        {
+            beamParticleSystem.Play();
+        }
+    }
+
+    // DeactivateBeam 메서드 수정
+    private void DeactivateBeam()
+    {
+        if (beamCone != null)
+        {
+            beamCone.SetActive(false);
+        }
+        
+        if (beamParticleSystem != null)
+        {
+            beamParticleSystem.Stop();
+        }
     }
 
     private void OnDestroy()
