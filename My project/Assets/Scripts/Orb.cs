@@ -33,6 +33,16 @@ public class Orb : MonoBehaviour
     {
         // 구슬을 잡았을 때
         isGrabbed = true;
+        // 선반의 자식에서 탈출
+        transform.SetParent(null);
+        
+        // CurveOrbStorage에서 processedOrbs에서 제거
+        CurveOrbStorage storage = CurveOrbStorage.Instance;
+        if (storage != null)
+        {
+            storage.RemoveFromProcessedOrbs(this.gameObject);
+        }
+        
         // Rigidbody 물리 비활성화
         if (rb != null)
         {

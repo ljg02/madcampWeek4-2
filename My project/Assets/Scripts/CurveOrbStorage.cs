@@ -17,6 +17,21 @@ public class CurveOrbStorage : MonoBehaviour
     private int[] currentShelfStorageIndices; // 각 선반의 현재 저장 인덱스
     // currentShelfStorageIndices[0] : 0번 선반의 다음 저장 위치
     private bool isProcessing = false;
+    
+    public static CurveOrbStorage Instance { get; private set; } // 싱글톤 인스턴스
+
+    private void Awake()
+    {
+        // 싱글톤 설정
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {
@@ -57,6 +72,14 @@ public class CurveOrbStorage : MonoBehaviour
                 Debug.Log($"Orb {other.gameObject.name} is already processed. Ignoring.");
                 return;
             }
+            
+            // 오브젝트의 부모가 자신인지 확인, 이미 자식이면 트리거 동작하지 않게
+            if (other.transform.parent == transform)
+            {
+                Debug.Log($"Orb {other.gameObject.name} is already on the shelf. Ignoring.");
+                return;
+            }
+            
             processedOrbs.Add(other.gameObject); // 처리된 오브젝트로 등록
             Debug.Log($"Orb {other.gameObject.name} triggered");
             orbQueue.Enqueue(other.gameObject);
@@ -165,6 +188,15 @@ public class CurveOrbStorage : MonoBehaviour
                     break;
                 }
             }
+        }
+    }
+    
+    public void RemoveFromProcessedOrbs(GameObject orb)
+    {
+        if (processedOrbs.Contains(orb))
+        {
+            processedOrbs.Remove(orb);
+            Debug.Log($"Orb {orb.name} removed from processedOrbs.");
         }
     }
 }
