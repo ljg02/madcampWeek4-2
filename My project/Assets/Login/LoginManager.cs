@@ -5,6 +5,24 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
+[System.Serializable]
+public class LoginRequest
+{
+    public string email;
+    public string password;
+
+    public LoginRequest(string email, string password)
+    {
+        this.email = email;
+        this.password = password;
+    }
+}
+[System.Serializable]
+public class LoginResponse
+{
+    public bool success;
+    public string token;
+}
 public class LoginManager : MonoBehaviour
 {
     [SerializeField] private TMP_InputField emailInput; // 이메일 입력 필드
@@ -17,11 +35,6 @@ public class LoginManager : MonoBehaviour
     {
         loginButton.onClick.AddListener(OnLoginButtonPressed);
     }
-    void Start()
-    {
-        loginButton.onClick.AddListener(OnLoginButtonPressed);
-    }
-
     // 로그인 버튼이 눌렸을 때 호출
     public void OnLoginButtonPressed()
     {
@@ -41,7 +54,7 @@ public class LoginManager : MonoBehaviour
     private IEnumerator Login(string email, string password)
     {
         // JSON 요청 생성
-        string jsonBody = JsonUtility.ToJson(new { email, password });
+        string jsonBody = $"{{\"email\":\"{email}\",\"password\":\"{password}\"}}";
 
         UnityWebRequest request = new UnityWebRequest(loginUrl, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
@@ -51,15 +64,9 @@ public class LoginManager : MonoBehaviour
 
         // 요청 전송
         yield return request.SendWebRequest();
-        Debug.Log("result: " + request.result);
-        Debug.Log("succes: " + UnityWebRequest.Result.Success);
-        Debug.Log($"Response Code: {request.responseCode}");
-
+        
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log("Login successful: " + request.downloadHandler.text);
-            Debug.Log("Response: " + request.downloadHandler.text);
-
             statusText.text = "Login successful!";
             
             // 응답 처리
@@ -68,21 +75,13 @@ public class LoginManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Login failed: " + request.error);
-            statusText.text = "Login failed: " + request.error;
+            statusText.text = $"Login failed: {request.error}";
         }
+        request.Dispose(); 
     }
     private void OnDisable()
     {
         loginButton.onClick.RemoveListener(OnLoginButtonPressed);
     }
 
-}
-
-//응답 객체
-[System.Serializable]
-public class LoginResponse
-{
-    public bool success;
-    public string token;
 }

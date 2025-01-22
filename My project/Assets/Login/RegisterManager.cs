@@ -54,8 +54,7 @@ public class RegisterManager : MonoBehaviour
     
     private IEnumerator Register(string email, string password)
     {   
-        RegisterRequest registerData = new RegisterRequest(email, password);
-        string jsonBody = JsonUtility.ToJson(registerData);
+        string jsonBody = $"{{\"email\":\"{email}\",\"password\":\"{password}\"}}";
         
         UnityWebRequest request = new UnityWebRequest(registerUrl, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
@@ -75,5 +74,9 @@ public class RegisterManager : MonoBehaviour
             Debug.LogError("Register failed: " + request.error);
             statusText.text = $"Register failed: {request.error}";
         }
+    }
+    private void OnDisable()
+    {
+        registerButton.onClick.RemoveListener(OnRegisterButtonPressed);
     }
 }
