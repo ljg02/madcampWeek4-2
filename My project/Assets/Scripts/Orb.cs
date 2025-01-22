@@ -10,6 +10,11 @@ public class Orb : MonoBehaviour
     private Camera mainCamera;
     private Rigidbody rb;
     private float distanceToCamera = 3f;
+    
+    // Emission 관련 변수
+    private Renderer orbRenderer;
+    private Color originalEmissionColor;
+    private Color glowColor = Color.white; // 원하는 발광 색상으로 설정
 
     void Start()
     {
@@ -18,6 +23,17 @@ public class Orb : MonoBehaviour
         if (rb == null)
         {
             Debug.LogError("Rigidbody가 없으면 Orb 스크립트를 사용할 수 없습니다.");
+        }
+        
+        orbRenderer = GetComponent<Renderer>();
+        if (orbRenderer != null)
+        {
+            originalEmissionColor = orbRenderer.material.GetColor("_EmissionColor");
+            DisableGlow();
+        }
+        else
+        {
+            Debug.LogError("Orb에 Renderer가 없습니다.");
         }
     }
 
@@ -82,5 +98,25 @@ public class Orb : MonoBehaviour
         // 원하는 방식으로 이동 (직접 위치 변경 또는 DOTween 사용)
         // 여기서는 DOTween을 사용하여 부드럽게 이동
         transform.DOMove(targetPosition, 0.1f).SetEase(Ease.Linear);
+    }
+    
+    // 발광 활성화
+    public void EnableGlow()
+    {
+        if (orbRenderer != null)
+        {
+            orbRenderer.material.EnableKeyword("_EMISSION");
+            orbRenderer.material.SetColor("_EmissionColor", glowColor);
+        }
+    }
+
+    // 발광 비활성화
+    public void DisableGlow()
+    {
+        if (orbRenderer != null)
+        {
+            orbRenderer.material.DisableKeyword("_EMISSION");
+            orbRenderer.material.SetColor("_EmissionColor", originalEmissionColor);
+        }
     }
 }
