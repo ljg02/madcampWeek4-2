@@ -11,7 +11,15 @@ public class BeamProjector : MonoBehaviour
 
     // VideoPlayer 컴포넌트 (비디오 재생 시 사용)
     public VideoPlayer videoPlayer;
-    public LineRenderer beamLineRenderer; // 빔 효과를 위한 Line Renderer
+    
+    public ParticleSystem beamParticleSystem; // Particle System 참조
+    
+    public GameObject beamCone; // Cone 객체 참조
+    
+    public Light directionalLight; // 전역 조명 (Directional Light) 참조
+    public Light pointLight; // PointLight 참조
+    private float originalDirectionalIntensity; // 원래 Directional Light의 강도 저장
+    private float targetPointIntensity = 5f; // Point Light의 목표 강도 설정 (필요에 따라 조정)
 
     // 현재 트리거 영역에 있는 Orb
     private Orb currentOrb;
@@ -34,14 +42,46 @@ public class BeamProjector : MonoBehaviour
             Debug.LogError("Screen Renderer가 할당되지 않았습니다.");
         }
         
-        // 빔 Line Renderer 비활성화
-        if (beamLineRenderer != null)
+        // 빔 Particle System 비활성화
+        if (beamParticleSystem != null)
         {
-            beamLineRenderer.enabled = false;
+            beamParticleSystem.Stop();
         }
         else
         {
-            Debug.LogError("Beam Line Renderer가 할당되지 않았습니다.");
+            Debug.LogError("Beam Particle System이 할당되지 않았습니다.");
+        }
+        
+        // 빔 Cone 비활성화
+        if (beamCone != null)
+        {
+            beamCone.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("Beam Cone이 할당되지 않았습니다.");
+        }
+        
+        // 조명 초기화
+        if (directionalLight != null)
+        {
+            originalDirectionalIntensity = directionalLight.intensity;
+            directionalLight.enabled = true;
+        }
+        else
+        {
+            Debug.LogError("Directional Light가 할당되지 않았습니다.");
+        }
+        
+        // PointLight 초기화 (비활성화)
+        if (pointLight != null)
+        {
+            pointLight.intensity = 0f; // 초기에는 Point Light를 끕니다.
+            pointLight.enabled = false; // 초기에는 비활성화
+        }
+        else
+        {
+            Debug.LogError("PointLight가 할당되지 않았습니다.");
         }
     }
     
@@ -280,25 +320,6 @@ public class BeamProjector : MonoBehaviour
         }, alpha, duration);
     }
     
-    private void ActivateBeam()
-    {
-        if (beamLineRenderer != null)
-        {
-            beamLineRenderer.enabled = true;
-            // 빔의 시작점과 끝점을 설정 (BeamProjector 위치와 Screen 위치)
-            beamLineRenderer.SetPosition(0, transform.position);
-            beamLineRenderer.SetPosition(1, screenRenderer.transform.position);
-        }
-    }
-
-    private void DeactivateBeam()
-    {
-        if (beamLineRenderer != null)
-        {
-            beamLineRenderer.enabled = false;
-        }
-    }
-    
     private void StartVibration(Orb orb)
     {
         if (orb == null) return;
@@ -341,6 +362,78 @@ public class BeamProjector : MonoBehaviour
     {
         // 비디오가 준비되면 재생
         vp.Play();
+    }
+    
+    // ActivateBeam 메서드 수정
+    private void ActivateBeam()
+    {
+        if (beamCone != null)
+        {
+            beamCone.SetActive(true);
+        }
+        
+        if (beamParticleSystem != null)
+        {
+            beamParticleSystem.Play();
+        }
+        
+        // 화면 어둡게 하기 (예: Alpha 0.5)
+        DimScreen(0.5f, 1f);
+        
+        // Directional Light 비활성화 및 PointLight 활성화
+        if (directionalLight != null)
+        {
+            directionalLight.DOIntensity(0f, 1f).SetEase(Ease.InOutQuad).OnComplete(() =>
+            {
+                directionalLight.enabled = false; // 완전히 어두워지면 비활성화
+            });
+        }
+        if (pointLight != null)
+        {
+            pointLight.enabled = true; // 활성화
+            pointLight.DOIntensity(targetPointIntensity, 1f).SetEase(Ease.InOutQuad);
+        }
+    }
+
+    // DeactivateBeam 메서드 수정
+    private void DeactivateBeam()
+    {
+        if (beamCone != null)
+        {
+            beamCone.SetActive(false);
+        }
+        
+        if (beamParticleSystem != null)
+        {
+            beamParticleSystem.Stop();
+        }
+        
+        // 화면 원래대로 되돌리기 (Alpha 0)
+        DimScreen(0f, 1f);
+        
+        // Point Light 서서히 어둡게
+        if (pointLight != null)
+        {
+            pointLight.DOIntensity(0f, 1f).SetEase(Ease.InOutQuad).OnComplete(() =>
+            {
+                pointLight.enabled = false; // 완전히 어두워지면 비활성화
+            });
+        }
+        // Directional Light 서서히 밝게
+        if (directionalLight != null)
+        {
+            directionalLight.enabled = true; // 활성화
+            directionalLight.DOIntensity(originalDirectionalIntensity, 1f).SetEase(Ease.InOutQuad);
+        }
+    }
+    
+    private void DimScreen(float targetAlpha, float duration)
+    {
+        if (directionalLight != null)
+        {
+            // DOTween을 사용하여 조명 강도 변경
+            //directionalLight.DOIntensity(targetAlpha > 0 ? originalLightIntensity * 0.1f : originalLightIntensity, duration).SetEase(Ease.InOutQuad);
+        }
     }
 
     private void OnDestroy()
