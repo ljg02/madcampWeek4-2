@@ -53,7 +53,11 @@ public class OrbDataManager : MonoBehaviour
 
     public void LoadImageFromFile()
     {
-        var paths = StandaloneFileBrowser.OpenFilePanel("Select Image", "", "png", false);
+        // Define extension filters
+        var extensions = new[] {
+            new ExtensionFilter("Image Files", "png", "jpg", "jpeg")
+        };
+        var paths = StandaloneFileBrowser.OpenFilePanel("Select Image", "", extensions, false);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
             StartCoroutine(LoadImage(paths[0]));
@@ -110,7 +114,7 @@ public class OrbDataManager : MonoBehaviour
         if (isImageSelected && orbData.orbImage is not null)
         {
             byte[] imageBytes = orbData.orbImage.texture.EncodeToPNG();
-            form.AddBinaryData("files", imageBytes, "image.png", "image/png");
+            form.AddBinaryData("files", imageBytes, "image.jpg", "image/jpg");
         }
 
         if (isVideoSelected && !string.IsNullOrEmpty(videoPlayer.url))
@@ -118,9 +122,11 @@ public class OrbDataManager : MonoBehaviour
             byte[] videoBytes = System.IO.File.ReadAllBytes(videoPlayer.url.Replace("file://", ""));
             form.AddBinaryData("files", videoBytes, "video.mp4", "video/mp4");
         }
-
+        
         using (UnityWebRequest request = UnityWebRequest.Post("http://localhost:5000/uploads", form))
         {
+            Debug.Log(request.result);
+            Debug.Log(UnityWebRequest.Result.Success);
             yield return request.SendWebRequest(); 
             if (request.result == UnityWebRequest.Result.Success)
             {
