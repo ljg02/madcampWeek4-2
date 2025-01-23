@@ -6,6 +6,11 @@ using TMPro;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
+[System.Serializable]
+public class EmotionRequestData
+{
+    public string text;
+}
 public class OrbDataManager : MonoBehaviour
 {
     public OrbData orbData;
@@ -24,7 +29,8 @@ public class OrbDataManager : MonoBehaviour
     private bool isTextEntered = false;
     
     private void Awake()
-    {
+    {   
+        textInputField.onValueChanged.AddListener(delegate { SetOrbText(); });
         videoButton.onClick.AddListener(LoadVideoFromFile);
         imageButton.onClick.AddListener(LoadImageFromFile);
         saveButton.onClick.AddListener(SaveDataToServer);
@@ -34,6 +40,7 @@ public class OrbDataManager : MonoBehaviour
     public void LoadVideoFromFile()
     {
         var paths = StandaloneFileBrowser.OpenFilePanel("Select Video", "", "mp4", false);
+        Debug.Log(paths);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
             string videoPath = "file://" + paths[0];
@@ -47,6 +54,8 @@ public class OrbDataManager : MonoBehaviour
     public void LoadImageFromFile()
     {
         var paths = StandaloneFileBrowser.OpenFilePanel("Select Image", "", "png", false);
+        Debug.Log("path: " + paths);
+        Debug.Log(paths.Length);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
             StartCoroutine(LoadImage(paths[0]));
@@ -57,6 +66,7 @@ public class OrbDataManager : MonoBehaviour
     {
         using (var imageRequest = UnityWebRequestTexture.GetTexture("file://" + path))
         {
+            Debug.Log(imageRequest);
             yield return imageRequest.SendWebRequest();
             if (imageRequest.result == UnityWebRequest.Result.Success)
             {
@@ -77,7 +87,7 @@ public class OrbDataManager : MonoBehaviour
     {
         orbData.orbText = textInputField.text;
         orbTextDisplay.text = orbData.orbText;
-        isTextEntered = !string.IsNullOrEmpty(orbData.orbText);
+        isTextEntered = true;
         CheckSaveButton();
     }
 
@@ -96,23 +106,49 @@ public class OrbDataManager : MonoBehaviour
         WWWForm form = new WWWForm();
         
         if (isTextEntered)
-            form.AddField("text", orbData.orbText);
+        {
+            // var jsonData = new { text = orbData.orbText }; // 감정 분석용 JSON 데이터
 
+            using (UnityWebRequest request = new UnityWebRequest("http://localhost:5000/emotion/text", "POST"))
+            {
+                EmotionRequestData jsonData = new EmotionRequestData { text = orbData.orbText }; // 감정 분석용 JSON 데이터
+                string json = JsonUtility.ToJson(jsonData);
+                byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.downloadHandler = new DownloadHandlerBuffer();
+                request.SetRequestHeader("Content-Type", "application/json");
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    Debug.Log("Emotion analysis response: " + request.downloadHandler.text);
+                }
+                else
+                {
+                    Debug.LogError("Failed to send text for emotion analysis: " + request.error);
+                }
+            }
+        }
         if (isImageSelected && orbData.orbImage is not null)
         {
             byte[] imageBytes = orbData.orbImage.texture.EncodeToPNG();
-            form.AddBinaryData("image", imageBytes, "image.png", "image/png");
+            Debug.Log(imageBytes);
+            form.AddBinaryData("files", imageBytes, "image.png", "image/png");
         }
 
         if (isVideoSelected && !string.IsNullOrEmpty(videoPlayer.url))
         {
             byte[] videoBytes = System.IO.File.ReadAllBytes(videoPlayer.url.Replace("file://", ""));
-            form.AddBinaryData("video", videoBytes, "video.mp4", "video/mp4");
+            form.AddBinaryData("files", videoBytes, "video.mp4", "video/mp4");
         }
 
-        using (UnityWebRequest request = UnityWebRequest.Post("http://localhost:5000/upload", form))
+        using (UnityWebRequest request = UnityWebRequest.Post("http://localhost:5000/uploads", form))
         {
-            yield return request.SendWebRequest();
+            Debug.Log(request); //UnityEngine.Networking.UnityWebRequest
+            yield return request.SendWebRequest(); 
+            Debug.Log(request.result); //protocolerror
+            Debug.Log(UnityWebRequest.Result.Success); //success
             if (request.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log("Data successfully sent to server.");
