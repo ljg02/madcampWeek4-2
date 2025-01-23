@@ -29,6 +29,9 @@ public class LoginManager : MonoBehaviour
     [SerializeField] private TMP_InputField passwordInput; // 비밀번호 입력 필드
     [SerializeField] private TextMeshProUGUI statusText; // 상태 메시지 표시
     [SerializeField] private Button loginButton;
+    [SerializeField] private Button backButton;
+    
+    [SerializeField] public GameObject initialPageCanvas;   // 초기 페이지 캔버스
     
     private string loginUrl = "http://localhost:5000/user/login"; // 백엔드 로그인 API URL
     
@@ -45,6 +48,13 @@ public class LoginManager : MonoBehaviour
     private void Awake()
     {
         loginButton.onClick.AddListener(OnLoginButtonPressed);
+        backButton.onClick.AddListener(ShowInitialCanvas);
+    }
+    
+    public void ShowInitialCanvas()
+    {
+        loginUI.SetActive(false);
+        initialPageCanvas.SetActive(true);
     }
     
     private void Start()
@@ -63,7 +73,7 @@ public class LoginManager : MonoBehaviour
         // CameraController가 할당되었는지 확인하고, 초기 상태를 비활성화
         if (cameraController != null)
         {
-            cameraController.allowControl = false;
+            cameraController.enabled = false;
         }
         else
         {
@@ -90,9 +100,6 @@ public class LoginManager : MonoBehaviour
     {
         // JSON 요청 생성
         string jsonBody = $"{{\"email\":\"{email}\",\"password\":\"{password}\"}}";
-        Debug.Log(email);
-        Debug.Log(password);
-        Debug.Log(jsonBody);
 
         UnityWebRequest request = new UnityWebRequest(loginUrl, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
@@ -102,7 +109,6 @@ public class LoginManager : MonoBehaviour
 
         // 요청 전송
         yield return request.SendWebRequest();
-        Debug.Log(request);
         
         if (request.result == UnityWebRequest.Result.Success)
         {
@@ -188,7 +194,7 @@ public class LoginManager : MonoBehaviour
     {
         if (cameraController != null)
         {
-            cameraController.allowControl = true;
+            cameraController.enabled = true;
             Debug.Log("CameraController has been enabled.");
         }
         else
@@ -201,7 +207,7 @@ public class LoginManager : MonoBehaviour
     {
         if (cameraController != null)
         {
-            cameraController.allowControl = false;
+            cameraController.enabled = false;
             Debug.Log("CameraController has been disabled.");
         }
         else

@@ -23,12 +23,31 @@ public class RegisterManager : MonoBehaviour
     [SerializeField] private TMP_InputField confirmPasswordInput;
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private Button registerButton;
+    [SerializeField] private Button backButton;
+    
+    [SerializeField] public GameObject initialPageCanvas;   // 초기 페이지 캔버스
+    [SerializeField] public GameObject loginCanvas;         // 로그인 캔버스
+    [SerializeField] public GameObject registerCanvas;      // 회원가입 캔버스
 
     private string registerUrl = "http://localhost:5000/user/signup"; // 회원가입 API URL
 
     private void Awake()
     {
         registerButton.onClick.AddListener(OnRegisterButtonPressed);
+        backButton.onClick.AddListener(ShowInitialCanvas);
+    }
+    
+    public void ShowLoginCanvas()
+    {
+        registerCanvas.SetActive(false);
+        loginCanvas.SetActive(true);
+    }
+
+    // 회원가입 캔버스를 활성화하고 초기 페이지를 비활성화
+    public void ShowInitialCanvas()
+    {
+        registerCanvas.SetActive(false);
+        initialPageCanvas.SetActive(true);
     }
 
     private void OnRegisterButtonPressed()
@@ -74,9 +93,12 @@ public class RegisterManager : MonoBehaviour
             Debug.LogError("Register failed: " + request.error);
             statusText.text = $"Register failed: {request.error}";
         }
+        
+        ShowLoginCanvas();
     }
     private void OnDisable()
     {
         registerButton.onClick.RemoveListener(OnRegisterButtonPressed);
+        backButton.onClick.RemoveListener(ShowInitialCanvas);
     }
 }
