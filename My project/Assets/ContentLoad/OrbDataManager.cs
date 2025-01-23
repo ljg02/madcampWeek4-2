@@ -30,6 +30,7 @@ public class OrbDataManager : MonoBehaviour
     
     private void Awake()
     {   
+        textInputField.onValueChanged.AddListener(delegate { SetOrbText(); });
         videoButton.onClick.AddListener(LoadVideoFromFile);
         imageButton.onClick.AddListener(LoadImageFromFile);
         saveButton.onClick.AddListener(SaveDataToServer);
@@ -39,6 +40,7 @@ public class OrbDataManager : MonoBehaviour
     public void LoadVideoFromFile()
     {
         var paths = StandaloneFileBrowser.OpenFilePanel("Select Video", "", "mp4", false);
+        Debug.Log(paths);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
             string videoPath = "file://" + paths[0];
@@ -52,6 +54,7 @@ public class OrbDataManager : MonoBehaviour
     public void LoadImageFromFile()
     {
         var paths = StandaloneFileBrowser.OpenFilePanel("Select Image", "", "png", false);
+        Debug.Log("path: " + paths);
         Debug.Log(paths.Length);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
@@ -63,6 +66,7 @@ public class OrbDataManager : MonoBehaviour
     {
         using (var imageRequest = UnityWebRequestTexture.GetTexture("file://" + path))
         {
+            Debug.Log(imageRequest);
             yield return imageRequest.SendWebRequest();
             if (imageRequest.result == UnityWebRequest.Result.Success)
             {
@@ -101,7 +105,6 @@ public class OrbDataManager : MonoBehaviour
     {
         WWWForm form = new WWWForm();
         
-        SetOrbText();
         if (isTextEntered)
         {
             // var jsonData = new { text = orbData.orbText }; // 감정 분석용 JSON 데이터
@@ -130,18 +133,22 @@ public class OrbDataManager : MonoBehaviour
         if (isImageSelected && orbData.orbImage is not null)
         {
             byte[] imageBytes = orbData.orbImage.texture.EncodeToPNG();
-            form.AddBinaryData("image", imageBytes, "image.png", "image/png");
+            Debug.Log(imageBytes);
+            form.AddBinaryData("files", imageBytes, "image.png", "image/png");
         }
 
         if (isVideoSelected && !string.IsNullOrEmpty(videoPlayer.url))
         {
             byte[] videoBytes = System.IO.File.ReadAllBytes(videoPlayer.url.Replace("file://", ""));
-            form.AddBinaryData("video", videoBytes, "video.mp4", "video/mp4");
+            form.AddBinaryData("files", videoBytes, "video.mp4", "video/mp4");
         }
 
         using (UnityWebRequest request = UnityWebRequest.Post("http://localhost:5000/uploads", form))
         {
-            yield return request.SendWebRequest();
+            Debug.Log(request); //UnityEngine.Networking.UnityWebRequest
+            yield return request.SendWebRequest(); 
+            Debug.Log(request.result); //protocolerror
+            Debug.Log(UnityWebRequest.Result.Success); //success
             if (request.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log("Data successfully sent to server.");
