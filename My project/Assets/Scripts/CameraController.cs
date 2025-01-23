@@ -12,6 +12,9 @@ public class CameraController : MonoBehaviour
     private float yaw = 0.0f;             // Y축 회전
     private float pitch = 0.0f;           // X축 회전
     private float currentZoom = 20.0f;    // 현재 줌 거리
+    
+    [HideInInspector]
+    public bool allowControl = false;      // 카메라 컨트롤 허용 여부
 
     void Start()
     {
@@ -23,6 +26,9 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
+        if (!allowControl)
+            return;
+        
         HandleRotation();
         HandleMovement();
         HandleZoom();

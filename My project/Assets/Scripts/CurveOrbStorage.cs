@@ -45,7 +45,7 @@ public class CurveOrbStorage : MonoBehaviour
         {
             var positions = shelf.GetShelfPositions();
             allStoragePositions.Add(positions);
-            Debug.Log($"ShelfCurve {shelf.name} returned {positions.Count} positions.");
+            // Debug.Log($"ShelfCurve {shelf.name} returned {positions.Count} positions.");
             // 각 선반의 자리 상태를 초기화 (모두 비어 있음)
             allStorageStates.Add(new bool[positions.Count]);
         }
