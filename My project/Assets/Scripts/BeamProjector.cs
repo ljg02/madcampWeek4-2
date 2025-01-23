@@ -155,6 +155,8 @@ public class BeamProjector : MonoBehaviour
             }
             
             isVibrating = true;
+            
+            SetBeamColors(orbData.orbColor);
 
             // Define the hover positions
             Vector3 initialHoverPosition = GetHoverPosition() + Vector3.up * 0.5f; // slightly above
@@ -211,6 +213,8 @@ public class BeamProjector : MonoBehaviour
             }
             
             isVibrating = true;
+            
+            SetBeamColors(orbData.orbColor);
 
             // Define the hover positions
             Vector3 initialHoverPosition = GetHoverPosition() + Vector3.up * 0.5f; // slightly above
@@ -426,6 +430,51 @@ public class BeamProjector : MonoBehaviour
             directionalLight.DOIntensity(originalDirectionalIntensity, 1f).SetEase(Ease.InOutQuad);
         }
     }
+    
+    private void SetBeamColors(Color targetColor)
+    {
+        // beamCone의 색상 설정
+        if (beamCone != null)
+        {
+            Renderer beamRenderer = beamCone.GetComponent<Renderer>();
+            if (beamRenderer != null)
+            {
+                // Material 인스턴스 생성하여 공유되지 않도록 함
+                beamRenderer.material = new Material(beamRenderer.material);
+                // 기존 색상 가져오기
+                Color currentColor = beamRenderer.material.GetColor("_Color");
+
+                // 새로운 색상 생성 (RGB는 orbColor에서, Alpha는 기존 유지)
+                Color newColor = new Color(targetColor.r, targetColor.g, targetColor.b, currentColor.a);
+
+                // Albedo 색상 설정
+                //beamRenderer.material.SetColor("_Color", newColor);
+
+                // Emission 비활성화
+                //beamRenderer.material.DisableKeyword("_EMISSION");
+                //beamRenderer.material.SetColor("_EmissionColor", Color.black); // Emission 색상을 검정색으로 설정하여 비활성화
+            }
+            else
+            {
+                Debug.LogError("BeamCone Renderer가 할당되지 않았습니다.");
+            }
+        }
+        else
+        {
+            Debug.LogError("BeamCone이 할당되지 않았습니다.");
+        }
+
+        // pointLight의 색상 설정
+        if (pointLight != null)
+        {
+            pointLight.color = new Color(targetColor.r, targetColor.g, targetColor.b, pointLight.color.a);
+        }
+        else
+        {
+            Debug.LogError("PointLight가 할당되지 않았습니다.");
+        }
+    }
+
     
     private void DimScreen(float targetAlpha, float duration)
     {
