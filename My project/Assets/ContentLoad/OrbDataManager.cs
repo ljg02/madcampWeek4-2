@@ -108,27 +108,7 @@ public class OrbDataManager : MonoBehaviour
         if (isTextEntered)
         {
             // var jsonData = new { text = orbData.orbText }; // 감정 분석용 JSON 데이터
-
-            using (UnityWebRequest request = new UnityWebRequest("http://localhost:5000/emotion/text", "POST"))
-            {
-                EmotionRequestData jsonData = new EmotionRequestData { text = orbData.orbText }; // 감정 분석용 JSON 데이터
-                string json = JsonUtility.ToJson(jsonData);
-                byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                yield return request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    Debug.Log("Emotion analysis response: " + request.downloadHandler.text);
-                }
-                else
-                {
-                    Debug.LogError("Failed to send text for emotion analysis: " + request.error);
-                }
-            }
+            form.AddField("text",orbData.orbText);
         }
         if (isImageSelected && orbData.orbImage is not null)
         {
