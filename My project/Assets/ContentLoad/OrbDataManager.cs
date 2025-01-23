@@ -54,8 +54,6 @@ public class OrbDataManager : MonoBehaviour
     public void LoadImageFromFile()
     {
         var paths = StandaloneFileBrowser.OpenFilePanel("Select Image", "", "png", false);
-        Debug.Log("path: " + paths);
-        Debug.Log(paths.Length);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
             StartCoroutine(LoadImage(paths[0]));
@@ -66,7 +64,6 @@ public class OrbDataManager : MonoBehaviour
     {
         using (var imageRequest = UnityWebRequestTexture.GetTexture("file://" + path))
         {
-            Debug.Log(imageRequest);
             yield return imageRequest.SendWebRequest();
             if (imageRequest.result == UnityWebRequest.Result.Success)
             {
@@ -113,7 +110,6 @@ public class OrbDataManager : MonoBehaviour
         if (isImageSelected && orbData.orbImage is not null)
         {
             byte[] imageBytes = orbData.orbImage.texture.EncodeToPNG();
-            Debug.Log(imageBytes);
             form.AddBinaryData("files", imageBytes, "image.png", "image/png");
         }
 
@@ -125,10 +121,7 @@ public class OrbDataManager : MonoBehaviour
 
         using (UnityWebRequest request = UnityWebRequest.Post("http://localhost:5000/uploads", form))
         {
-            Debug.Log(request); //UnityEngine.Networking.UnityWebRequest
             yield return request.SendWebRequest(); 
-            Debug.Log(request.result); //protocolerror
-            Debug.Log(UnityWebRequest.Result.Success); //success
             if (request.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log("Data successfully sent to server.");
