@@ -22,6 +22,8 @@
 - GitHub
 - GCP MySQL
 
+- Backend github : https://github.com/aldls/madcampWeek4-2Back
+
 ## Detail
 
 - 인사이드 아웃 본부 내부 구현
