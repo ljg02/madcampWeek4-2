@@ -12,6 +12,10 @@ public class InitialPageManager : MonoBehaviour
     public Button loginButton;             // 로그인 버튼
     public Button registerButton;          // 회원가입 버튼
 
+    void Awake()
+    {
+        initialPageCanvas.SetActive(true);
+    }
     void Start()
     {
         // 초기 페이지는 활성화, 다른 캔버스는 비활성화

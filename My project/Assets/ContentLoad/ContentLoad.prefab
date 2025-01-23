@@ -68,8 +68,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "ksdf\u200B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: ad1e9f3ed1f544c43813b2125fd891c3, type: 2}
+  m_sharedMaterial: {fileID: -8537428715580963948, guid: ad1e9f3ed1f544c43813b2125fd891c3, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -93,8 +93,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -202,7 +202,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Enter text...
+  m_text: how was your day?
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -653,6 +653,8 @@ MonoBehaviour:
   videoButton: {fileID: 5597006226785562095}
   imageButton: {fileID: 2521335432238362165}
   saveButton: {fileID: 2505207628711451443}
+  orbPrefab: {fileID: 0}
+  spawnParent: {fileID: 0}
 --- !u!1 &3677535305804566741
 GameObject:
   m_ObjectHideFlags: 0
@@ -792,7 +794,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2223985864237269063
 RectTransform:
   m_ObjectHideFlags: 0

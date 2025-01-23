@@ -20,6 +20,8 @@ public class OrbDataManager : MonoBehaviour
     public TextMeshProUGUI orbTextDisplay;
     public TMP_InputField textInputField;
     
+    public GameObject createPageCanvas;   // 오브 생성 페이지 캔버스
+    
     [SerializeField] private Button videoButton;
     [SerializeField] private Button imageButton;
     [SerializeField] private Button saveButton;
@@ -27,6 +29,9 @@ public class OrbDataManager : MonoBehaviour
     private bool isVideoSelected = false;
     private bool isImageSelected = false;
     private bool isTextEntered = false;
+    
+    public GameObject orbPrefab; // 인스펙터에서 할당할 프리팹
+    public Transform spawnParent; // 프리팹이 생성될 캔버스의 부모 (UI인 경우)
     
     private void Awake()
     {   
@@ -104,6 +109,10 @@ public class OrbDataManager : MonoBehaviour
 
     private IEnumerator SendDataToServer()
     {
+        // 프리팹 인스턴스화
+        InstantiateOrbPrefab();
+        createPageCanvas.SetActive(false);
+        
         WWWForm form = new WWWForm();
         
         if (isTextEntered)
@@ -137,6 +146,59 @@ public class OrbDataManager : MonoBehaviour
                 Debug.LogError("Error sending data: " + request.error);
             }
         }
+    }
+    
+    private void InstantiateOrbPrefab()
+    {
+        if (orbPrefab != null && spawnParent != null)
+        {
+            // 프리팹을 spawnParent 위치 근처에 인스턴스화 (랜덤 위치 예시)
+            Vector3 spawnPosition = spawnParent.position + new Vector3(Random.Range(-5f, 5f), 0, Random.Range(-5f, 5f));
+            Quaternion spawnRotation = Quaternion.identity; // 기본 회전
+            GameObject newOrb = Instantiate(orbPrefab, spawnPosition, spawnRotation);
+
+            // Orb 스크립트 컴포넌트 가져오기
+            Orb orbScript = newOrb.GetComponent<Orb>();
+            if (orbScript != null)
+            {
+                // orbData 할당
+                orbScript.orbData = new OrbData
+                {
+                    orbName = orbData.orbName, // 필요 시 설정
+                    orbText = orbData.orbText,
+                    orbImage = orbData.orbImage,
+                    orbVideo = orbData.orbVideo
+                };
+            }
+            else
+            {
+                Debug.LogError("Orb 스크립트 컴포넌트를 프리팹에서 찾을 수 없습니다.");
+            }
+
+            // 데이터 초기화 (옵션)
+            ResetOrbData();
+        }
+        else
+        {
+            if (orbPrefab == null)
+                Debug.LogError("orbPrefab이 인스펙터에서 할당되지 않았습니다.");
+            if (spawnParent == null)
+                Debug.LogError("spawnParent가 인스펙터에서 할당되지 않았습니다.");
+        }
+    }
+    
+    private void ResetOrbData()
+    {
+        orbData.orbText = "";
+        orbData.orbImage = null;
+        orbData.orbVideo = null;
+        isVideoSelected = false;
+        isImageSelected = false;
+        isTextEntered = false;
+        saveButton.interactable = false;
+        textInputField.text = "";
+        orbImageDisplay.sprite = null;
+        orbTextDisplay.text = "";
     }
 
     private void OnDisable()
