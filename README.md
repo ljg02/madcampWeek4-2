@@ -33,6 +33,3 @@
 - 기억 구슬 추가하기
     - 텍스트, 이미지 저장
     - ai 이용하여 기분 판단 → 구슬 색 바뀌어 저장
-
-## Backend Repository
-https://github.com/aldls/madcampWeek4-2Back.git
