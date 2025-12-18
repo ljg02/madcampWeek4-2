@@ -34,7 +34,7 @@
 ![구슬1](https://github.com/user-attachments/assets/71c42247-34a8-4b1d-b40f-80d03c0b559c)
 
 
-- 모델링 내 선반 위치에 순차적으로 기억 구슬 저장, 빼내기
+- 본부 내부 선반에 순차적으로 기억 구슬 저장됨, 클릭으로 멀리서도 빼내기 가능
 ![구슬2](https://github.com/user-attachments/assets/db9a28cf-915a-4b9f-a935-73018e5d38d9)
 
 
