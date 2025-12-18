@@ -1,4 +1,4 @@
-# madcampWeek4-2
+# madcampWeek4-2 - Inside Memory
 
 ## Team
 
@@ -25,11 +25,22 @@
 - Backend github : https://github.com/aldls/madcampWeek4-2Back
 
 ## Detail
+<img width="2560" height="1600" alt="스크린샷 2025-01-23 204039" src="https://github.com/user-attachments/assets/234819dc-d06c-42bf-a030-1e92e3a46448" />
 
-- 인사이드 아웃 본부 내부 구현
-- 모델링 내 선반 위치에 순차적으로 구슬 저장, 빼내기
+- 로그인을 통해 사용자의 본부를 불러옴
+![로그인](https://github.com/user-attachments/assets/7bc8ce34-7399-48bd-b2e8-a8b9c15e7621)
+
+- 인사이드 아웃 영화를 바탕으로 본부를 구현
+![구슬1](https://github.com/user-attachments/assets/71c42247-34a8-4b1d-b40f-80d03c0b559c)
+
+
+- 모델링 내 선반 위치에 순차적으로 기억 구슬 저장, 빼내기
+![구슬2](https://github.com/user-attachments/assets/db9a28cf-915a-4b9f-a935-73018e5d38d9)
+
+
 - 빔 프로젝터에 띄워 구슬에 담긴 기억 확인
 
-- 기억 구슬 추가하기
-    - 텍스트, 이미지 저장
-    - ai 이용하여 기분 판단 → 구슬 색 바뀌어 저장
+![구슬3](https://github.com/user-attachments/assets/a81cc521-1022-412b-a005-396a81761c3c)
+
+
+
